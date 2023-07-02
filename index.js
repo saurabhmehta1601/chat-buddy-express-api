@@ -1,6 +1,5 @@
 require("dotenv").config();
 const { Configuration, OpenAIApi } = require("openai");
-const uuid = require("uuid").v4;
 const express = require("express");
 
 const config = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
@@ -33,11 +32,9 @@ app.post("/autocomplete", async function (req, res) {
       frequency_penalty: 0.1,
     });
 
-    console.log({ autocompleteResponse });
+    const { id, choices } = autocompleteResponse.data;
+    return res.status(200).json({ id, text: choices[0]?.text });
 
-    return res.status(200).json({
-      response: autocompleteResponse.data,
-    });
   } catch (error) {
     console.error({ error });
     return res.status(500).send("Internal Server Error");
