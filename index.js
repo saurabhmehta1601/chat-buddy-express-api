@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { Configuration, OpenAIApi } = require("openai");
 const uuid = require("uuid").v4;
 const express = require("express");
@@ -5,15 +6,42 @@ const express = require("express");
 const config = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
 const openai = new OpenAIApi(config);
 
-const app = express();
 const PORT = 80;
+const app = express();
+app.use(express.json());
 
 app.get("/", function (req, res) {
   return res.send("Hello from Chat Buddy.");
 });
 
-app.post("/autocomplete", function (req, res) {
-  return res.status(200).json({ message: "get autocomplete" });
+app.post("/autocomplete", async function (req, res) {
+  try {
+    const { prompt } = req.body;
+    if (
+      !Boolean(prompt) ||
+      (typeof prompt === "string" && !Boolean(prompt.trim()))
+    ) {
+      return res.status(400).send("Invalid or missing prompt in request");
+    }
+
+    const autocompleteResponse = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt: prompt,
+      temperature: 0.2,
+      max_tokens: 1000,
+      presence_penalty: 0.1,
+      frequency_penalty: 0.1,
+    });
+
+    console.log({ autocompleteResponse });
+
+    return res.status(200).json({
+      response: autocompleteResponse.data,
+    });
+  } catch (error) {
+    console.error({ error });
+    return res.status(500).send("Internal Server Error");
+  }
 });
 
 app.listen(PORT, function () {
