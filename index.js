@@ -1,6 +1,8 @@
 require("dotenv").config();
 const { Configuration, OpenAIApi } = require("openai");
 const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
 
 const config = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
 const openai = new OpenAIApi(config);
@@ -8,6 +10,8 @@ const openai = new OpenAIApi(config);
 const PORT = 80;
 const app = express();
 app.use(express.json());
+app.use(cors());
+app.use(helmet());
 
 app.get("/", function (req, res) {
   return res.send("Hello from Chat Buddy.");
@@ -34,7 +38,6 @@ app.post("/autocomplete", async function (req, res) {
 
     const { id, choices } = autocompleteResponse.data;
     return res.status(200).json({ id, text: choices[0]?.text });
-
   } catch (error) {
     console.error({ error });
     return res.status(500).send("Internal Server Error");
